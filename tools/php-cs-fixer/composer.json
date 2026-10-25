@@ -1,0 +1,17 @@
+{
+    "name": "kodvalley/improj-php-tool-php-cs-fixer",
+    "description": "Pinned development tool for improj-php (kept apart from the library dependencies).",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "friendsofphp/php-cs-fixer": "^3.95"
+    },
+    "config": {
+        "platform": { "php": "8.3.30" },
+        "sort-packages": true,
+        "allow-plugins": {},
+        "audit": { "abandoned": "fail" }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build and test output
+coverage/
+*.tgz
+npm-debug.log*
+.phpunit.cache/
+.php-cs-fixer.cache
+build/
+composer.phar
+
+# Secrets: never commit them
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+id_rsa*
+id_ed25519*
+auth.json
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

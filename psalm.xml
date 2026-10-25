@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<psalm
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config tools/psalm/vendor/vimeo/psalm/config.xsd"
+    errorLevel="1"
+    phpVersion="8.1"
+    resolveFromConfigFile="true"
+    findUnusedCode="false"
+    findUnusedBaselineEntry="false"
+    ensureOverrideAttribute="false"
+    strictBinaryOperands="true"
+    cacheDirectory="build/psalm"
+>
+    <projectFiles>
+        <directory name="src"/>
+        <!-- Reads php://input and request headers: gives taint analysis real sources. -->
+        <file name="examples/webhook-plain.php"/>
+        <ignoreFiles>
+            <directory name="vendor"/>
+            <directory name="tools"/>
+        </ignoreFiles>
+    </projectFiles>
+</psalm>

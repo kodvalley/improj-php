@@ -1,0 +1,68 @@
+# Releases kodvalley/improj-php when a maintainer pushes a signed tag vX.Y.Z.
+#
+# Packagist reads versions from git tags. Setup (once):
+# - Submit https://github.com/kodvalley/improj-php on packagist.org (Kodvalley
+#   account, 2FA on), and enable the GitHub integration so tags are picked up.
+# - Optional: store a Packagist "safe" API token as PACKAGIST_TOKEN (and the
+#   username as PACKAGIST_USERNAME) in the "packagist" environment; the
+#   publish job then asks Packagist to update at once.
+# - Settings > Environments > "packagist": required reviewers, tags v* only.
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
+        with:
+          php-version: "8.3"
+          coverage: pcov
+          tools: composer:v2
+      - name: The tag matches the SDK version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(php -r 'preg_match("/SDK_VERSION = .(\d+\.\d+\.\d+)./", file_get_contents("src/Http/Transport.php"), $m); echo $m[1];')"
+          test "v${version}" = "${TAG}" || { echo "Tag ${TAG} does not match SDK_VERSION ${version}"; exit 1; }
+      - run: composer validate --strict
+      - run: composer install --no-interaction --no-progress --prefer-dist
+      - run: composer tools:install
+      - run: composer check
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: packagist
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: gh release create "$TAG" --title "$TAG" --notes "See CHANGELOG.md. Install with: composer require kodvalley/improj-php" --verify-tag
+      - name: Ask Packagist to update now (optional)
+        env:
+          PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
+          PACKAGIST_TOKEN: ${{ secrets.PACKAGIST_TOKEN }}
+        if: env.PACKAGIST_TOKEN != ''
+        run: |
+          curl -sSf -X POST "https://packagist.org/api/update-package" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${PACKAGIST_USERNAME}:${PACKAGIST_TOKEN}" \
+            -d '{"repository":{"url":"https://github.com/kodvalley/improj-php"}}' > /dev/null

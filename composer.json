@@ -1,0 +1,78 @@
+{
+    "name": "kodvalley/improj-php",
+    "description": "Official PHP SDK for the IMPROJ public API: typed resources, cursor pagination, idempotency, retries, uploads and webhook verification on PSR-18.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["improj", "api", "sdk", "psr-18", "webhooks", "project-management"],
+    "homepage": "https://github.com/kodvalley/improj-php",
+    "authors": [
+        { "name": "Kodvalley", "email": "dev@improj.com", "homepage": "https://improj.com" }
+    ],
+    "support": {
+        "issues": "https://github.com/kodvalley/improj-php/issues",
+        "source": "https://github.com/kodvalley/improj-php",
+        "security": "https://github.com/kodvalley/improj-php/security/policy",
+        "docs": "https://improj.com/developers"
+    },
+    "require": {
+        "php": "^8.1",
+        "psr/http-client": "^1.0.3",
+        "psr/http-factory": "^1.1",
+        "psr/http-message": "^1.1 || ^2.0"
+    },
+    "suggest": {
+        "php-http/discovery": "Finds an installed PSR-18 client and PSR-17 factories, so new Improj($token) works without wiring them yourself",
+        "guzzlehttp/guzzle": "A PSR-18 HTTP client",
+        "symfony/http-client": "A PSR-18 HTTP client (with nyholm/psr7 for the PSR-17 factories)"
+    },
+    "autoload": {
+        "psr-4": { "Kodvalley\\Improj\\": "src/" }
+    },
+    "autoload-dev": {
+        "psr-4": { "Kodvalley\\Improj\\Tests\\": "tests/" }
+    },
+    "config": {
+        "platform": { "php": "8.1.31" },
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "allow-plugins": { "php-http/discovery": false },
+        "audit": { "abandoned": "fail" }
+    },
+    "require-dev": {
+        "nyholm/psr7": "^1.8.2",
+        "php-http/discovery": "^1.20",
+        "phpunit/phpunit": "^10.5"
+    },
+    "scripts": {
+        "test": "phpunit",
+        "coverage": [
+            "@php -d pcov.enabled=1 vendor/bin/phpunit --coverage-clover build/clover.xml --coverage-text",
+            "@php tools/coverage-check.php build/clover.xml 90"
+        ],
+        "tools:install": [
+            "@composer install --no-interaction --working-dir=tools/phpstan",
+            "@composer install --no-interaction --working-dir=tools/psalm",
+            "@composer install --no-interaction --working-dir=tools/php-cs-fixer"
+        ],
+        "phpstan": "@php tools/phpstan/vendor/bin/phpstan analyse -c phpstan.neon.dist --memory-limit=1G --no-progress",
+        "psalm": "@php tools/psalm/vendor/bin/psalm --no-progress",
+        "psalm:taint": "@php tools/psalm/vendor/bin/psalm --taint-analysis --no-progress",
+        "analyse": ["@phpstan", "@psalm", "@psalm:taint"],
+        "cs": "@php tools/php-cs-fixer/vendor/bin/php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "@php tools/php-cs-fixer/vendor/bin/php-cs-fixer fix",
+        "audit:all": [
+            "@composer audit",
+            "@composer audit --working-dir=tools/phpstan",
+            "@composer audit --working-dir=tools/psalm",
+            "@composer audit --working-dir=tools/php-cs-fixer"
+        ],
+        "check": ["@composer validate --strict", "@cs", "@analyse", "@coverage", "@audit:all"]
+    },
+    "scripts-descriptions": {
+        "coverage": "PHPUnit with coverage (pcov or Xdebug); fails below 90% of lines",
+        "analyse": "PHPStan (level max) and Psalm (level 1, plus taint analysis)",
+        "check": "Everything CI runs"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

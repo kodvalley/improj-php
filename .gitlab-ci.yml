@@ -1,0 +1,89 @@
+# GitLab CI for kodvalley/improj-php: PHPUnit on PHP 8.1 to 8.5, coverage,
+# PHPStan, Psalm with taint analysis, PHP-CS-Fixer, composer audit, SAST,
+# dependency scanning and secret detection. Images are pinned by digest;
+# Composer is a pinned, checksum-verified phar.
+
+include:
+  - template: Jobs/SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+
+stages: [test]
+
+variables:
+  PHP_81: "php:8.1-cli-bookworm@sha256:482717722f08d9a6c2b4f98c40bfee6d7935bd1a17fef928881ecd5884dfd76e"
+  PHP_82: "php:8.2-cli-bookworm@sha256:58bd7cb60b690c01106084ce4a0a73eb01094ceb00904ebb4b8514516765292a"
+  PHP_83: "php:8.3-cli-bookworm@sha256:cdb77e306d6bb99db40e513fbe036ecc6c53b575cbcb7e581387845fef26d755"
+  PHP_84: "php:8.4-cli-bookworm@sha256:496b5e02fe9fe44fcfb715023b931048111dc4e0bc719789d83c906be9f04b05"
+  PHP_85: "php:8.5-cli-bookworm@sha256:d4f6e10eb393de7e3a7a88e8b88e139072dd3ae297f6a5dada8257e6fe32c585"
+  GITLEAKS_IMAGE: "zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f"
+  COMPOSER_VERSION: "2.10.3"
+  COMPOSER_SHA256: "7a2d379d5b8ffdaa028580ef26494c36d2feef4b178d3dd1473a4dbc5e17c8d6"
+  COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composer-cache"
+
+default:
+  interruptible: true
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+.composer:
+  cache:
+    key:
+      files: [composer.lock]
+    paths: [.composer-cache/]
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq --no-install-recommends git unzip curl ca-certificates > /dev/null
+    - curl -sSfL -o /usr/local/bin/composer "https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
+    - echo "${COMPOSER_SHA256}  /usr/local/bin/composer" | sha256sum --check --strict -
+    - chmod +x /usr/local/bin/composer
+    - composer install --no-interaction --no-progress --prefer-dist
+
+phpunit:
+  stage: test
+  extends: .composer
+  image: $PHP_IMAGE
+  parallel:
+    matrix:
+      - PHP_IMAGE: [$PHP_81, $PHP_82, $PHP_83, $PHP_84, $PHP_85]
+  script:
+    - vendor/bin/phpunit
+    - for f in examples/*.php examples/laravel/*.php; do php -l "$f"; done
+
+coverage:
+  stage: test
+  extends: .composer
+  image: $PHP_83
+  script:
+    - apt-get install -y -qq --no-install-recommends $PHPIZE_DEPS > /dev/null
+    - pecl install pcov > /dev/null && docker-php-ext-enable pcov
+    - composer coverage
+  coverage: '/^Line coverage: (\d+(?:\.\d+)?)%/'
+
+analysis:
+  stage: test
+  extends: .composer
+  image: $PHP_83
+  script:
+    - composer validate --strict
+    - composer tools:install
+    - composer audit:all
+    - composer cs
+    - composer phpstan
+    - composer psalm
+    - composer psalm:taint
+
+gitleaks:
+  stage: test
+  image:
+    name: $GITLEAKS_IMAGE
+    entrypoint: [""]
+  variables:
+    GIT_DEPTH: "0"
+  script:
+    - gitleaks git --config .gitleaks.toml --redact --no-banner --exit-code 1 .
