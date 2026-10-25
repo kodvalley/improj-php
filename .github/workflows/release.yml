@@ -55,7 +55,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" --title "$TAG" --notes "See CHANGELOG.md. Install with: composer require kodvalley/improj-php" --verify-tag
+        run: |
+          gh release create "$TAG" --title "$TAG" --notes "See CHANGELOG.md. Install with: composer require kodvalley/improj-php" --verify-tag
       - name: Ask Packagist to update now (optional)
         env:
           PACKAGIST_USERNAME: ${{ secrets.PACKAGIST_USERNAME }}
