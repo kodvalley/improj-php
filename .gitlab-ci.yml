@@ -1,4 +1,4 @@
-# GitLab CI for kodvalley/improj-php: PHPUnit on PHP 8.1 to 8.5, coverage,
+# GitLab CI for kodvalley/improj-php: PHPUnit on PHP 8.2 to 8.5, coverage,
 # PHPStan, Psalm with taint analysis, PHP-CS-Fixer, composer audit, SAST,
 # dependency scanning and secret detection. Images are pinned by digest;
 # Composer is a pinned, checksum-verified phar.
@@ -11,7 +11,6 @@ include:
 stages: [test]
 
 variables:
-  PHP_81: "php:8.1-cli-bookworm@sha256:482717722f08d9a6c2b4f98c40bfee6d7935bd1a17fef928881ecd5884dfd76e"
   PHP_82: "php:8.2-cli-bookworm@sha256:58bd7cb60b690c01106084ce4a0a73eb01094ceb00904ebb4b8514516765292a"
   PHP_83: "php:8.3-cli-bookworm@sha256:cdb77e306d6bb99db40e513fbe036ecc6c53b575cbcb7e581387845fef26d755"
   PHP_84: "php:8.4-cli-bookworm@sha256:496b5e02fe9fe44fcfb715023b931048111dc4e0bc719789d83c906be9f04b05"
@@ -50,7 +49,7 @@ phpunit:
   image: $PHP_IMAGE
   parallel:
     matrix:
-      - PHP_IMAGE: [$PHP_81, $PHP_82, $PHP_83, $PHP_84, $PHP_85]
+      - PHP_IMAGE: [$PHP_82, $PHP_83, $PHP_84, $PHP_85]
   script:
     - vendor/bin/phpunit
     - for f in examples/*.php examples/laravel/*.php; do php -l "$f"; done

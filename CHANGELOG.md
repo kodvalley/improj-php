@@ -9,7 +9,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
-- `Improj` client for the IMPROJ API v1 (API version `2026-10-24`) on PSR-18 and PSR-17, with optional `php-http/discovery`: me, projects, work packages, activities, tasks, milestones, members, files, calendar events, your calendar, meetings, webhook endpoints, AI agents, the OpenAPI document, and `request()` for endpoints not wrapped yet.
+- `Improj` client for the IMPROJ API v1 (API version `2026-10-24`) on PSR-18 and PSR-17 for PHP 8.2 to 8.5, with optional `php-http/discovery`: me, projects, work packages, activities, tasks, milestones, members, files, calendar events, your calendar, meetings, webhook endpoints, AI agents, the OpenAPI document, and `request()` for endpoints not wrapped yet.
 - Typed, read-only models with `toArray()` for forward compatibility.
 - `Page` with `nextPage()` and lazy `autoPaging()` generators (`all()` on every list), protected against repeated cursors.
 - Automatic `Idempotency-Key` on every POST (`RequestOptions` to override).

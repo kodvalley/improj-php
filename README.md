@@ -2,14 +2,14 @@
 
 [![CI](https://github.com/kodvalley/improj-php/actions/workflows/ci.yml/badge.svg)](https://github.com/kodvalley/improj-php/actions/workflows/ci.yml)
 [![Packagist](https://img.shields.io/packagist/v/kodvalley/improj-php)](https://packagist.org/packages/kodvalley/improj-php)
-[![PHP](https://img.shields.io/badge/php-8.1%20to%208.5-777bb4)](composer.json)
+[![PHP](https://img.shields.io/badge/php-8.2%20to%208.5-777bb4)](composer.json)
 [![PHPStan level max](https://img.shields.io/badge/PHPStan-level%20max-brightgreen)](phpstan.neon.dist)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/kodvalley/improj-php/badge)](https://scorecard.dev/viewer/?uri=github.com/kodvalley/improj-php)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 The official PHP SDK for the [IMPROJ public API](https://improj.com/developers): typed resources, cursor pagination with generators, automatic idempotency keys, safe retries that honour `Retry-After`, the two-step upload helper and webhook verification.
 
-- **PHP 8.1 to 8.5**, PSR-4, **PSR-18** HTTP client and **PSR-17** factories: use Guzzle, Symfony HttpClient or any other implementation.
+- **PHP 8.2 to 8.5**, PSR-4, **PSR-18** HTTP client and **PSR-17** factories: use Guzzle, Symfony HttpClient or any other implementation.
 - **Runtime dependencies: only the three PSR interface packages.** `php-http/discovery` is optional.
 - PHPStan level max with strict rules, Psalm level 1 with taint analysis, PHP-CS-Fixer (PSR-12, PER-CS 2.0), PHPUnit with a 90% line-coverage gate.
 
@@ -52,7 +52,7 @@ Without explicit factories the client uses `php-http/discovery` if it is install
 
 Create a token in IMPROJ under **Settings > Developers**. `improj_pat_...` acts as you; `improj_org_...` acts as the organisation owner or admin who created it, limited to that organisation's projects. Give each integration its own token with the fewest scopes, a project list, an expiry and an IP allow-list.
 
-The SDK sends the token only as `Authorization: Bearer ...`, never in a URL and never with cookies, refuses plain `http` (except `localhost` for testing) and refuses redirects. `var_dump()`/`print_r()` show a masked token, and the client cannot be serialised. The token parameter is marked `#[\SensitiveParameter]`, so it is hidden from stack traces on PHP 8.2+.
+The SDK sends the token only as `Authorization: Bearer ...`, never in a URL and never with cookies, refuses plain `http` (except `localhost` for testing) and refuses redirects. `var_dump()`/`print_r()` show a masked token, and the client cannot be serialised. The token parameter is marked `#[\SensitiveParameter]`, so it is hidden from stack traces.
 
 | Constructor argument | Default | Meaning |
 |---|---|---|
@@ -183,4 +183,12 @@ composer audit:all       # the library and every tool
 composer check           # all of the above, as CI runs it
 ```
 
-The library's `composer.lock` is resolved for PHP 8.1 (`config.platform.php`) so the same lock installs on 8.1 to 8.5. See [CONTRIBUTING.md](CONTRIBUTING.md) and [CHANGELOG.md](CHANGELOG.md). Licensed under the [MIT License](LICENSE).
+The library's `composer.lock` is resolved for PHP 8.2 (`config.platform.php`) so the same lock installs on 8.2 to 8.5; tests run on PHPUnit 11.5, the newest line that supports PHP 8.2. See [CONTRIBUTING.md](CONTRIBUTING.md) and [CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+The code and documentation in this repository are released under the [MIT License](LICENSE), copyright Kodvalley.
+
+The `info.license` field of the IMPROJ OpenAPI description (Proprietary, see https://improj.com/terms) covers the IMPROJ service itself, not this repository. Using the API is subject to the IMPROJ terms; using this code is subject to the MIT License.
+
+Contact: info@kodvalley.com. Security reports: see [SECURITY.md](SECURITY.md).
