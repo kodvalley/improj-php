@@ -77,9 +77,9 @@ abstract class AbstractResource
      *
      * @return Page<T>
      */
-    protected function page(string $path, array $params, Closure $map, ?RequestOptions $options = null, string $cursorField = 'next_cursor'): Page
+    protected function page(string $path, array $params, Closure $map, ?RequestOptions $options = null, ?string $legacyCursorField = null): Page
     {
-        $fetch = function (?string $cursor) use (&$fetch, $path, $params, $map, $options, $cursorField): Page {
+        $fetch = function (?string $cursor) use (&$fetch, $path, $params, $map, $options, $legacyCursorField): Page {
             $query = $params;
             if ($cursor !== null) {
                 $query['cursor'] = $cursor;
@@ -90,7 +90,10 @@ abstract class AbstractResource
                     throw new UnexpectedValueException('A list answer must be an object.');
                 }
                 $items = array_map($map, Data::objects($body, 'data'));
-                $next = $body[$cursorField] ?? ($body['next_cursor'] ?? null);
+                // The signed next_cursor wins; a legacy field is read only when it is absent.
+                $next = \array_key_exists('next_cursor', $body) || $legacyCursorField === null
+                    ? ($body['next_cursor'] ?? null)
+                    : ($body[$legacyCursorField] ?? null);
                 if ($next !== null && !\is_string($next) && !\is_int($next)) {
                     throw new UnexpectedValueException('next_cursor must be a string or null.');
                 }

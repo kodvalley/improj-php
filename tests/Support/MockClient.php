@@ -95,7 +95,7 @@ final class MockClient implements ClientInterface
     {
         return static fn(): ResponseInterface => new Response(
             $status,
-            ['Content-Type' => 'application/json', 'X-Request-Id' => 'req_php_1'] + $headers,
+            $headers + ['Content-Type' => 'application/json', 'X-Request-Id' => 'req_php_1'],
             $status === 204 ? null : json_encode($body, \JSON_THROW_ON_ERROR),
         );
     }
@@ -108,7 +108,7 @@ final class MockClient implements ClientInterface
     {
         return static fn(): ResponseInterface => new Response(
             $status,
-            ['Content-Type' => 'application/problem+json', 'X-Request-Id' => 'req_problem_1'] + $headers,
+            $headers + ['Content-Type' => 'application/problem+json', 'X-Request-Id' => 'req_problem_1'],
             json_encode($extra + [
                 'type' => 'https://improj.com/developers#error-' . $code,
                 'title' => 'Error',

@@ -270,9 +270,10 @@ final class ResourcesTest extends TestCase
 
     public function testAgentItemsFollowTheNumericCursor(): void
     {
-        $m = new MockClient(MockClient::json(200, ['data' => [['id' => 9]], 'nextCursor' => 9]), MockClient::json(200, ['data' => [['id' => 8]], 'nextCursor' => null]));
+        // A server older than the 2026-10-24 contract sends only the numeric nextCursor.
+        $m = new MockClient(MockClient::json(200, ['data' => [SyncTest::agentItem(9)], 'nextCursor' => 9]), MockClient::json(200, ['data' => [SyncTest::agentItem(8)], 'nextCursor' => null]));
         $items = iterator_to_array($m->client()->agents->items(4)->autoPaging(), false);
-        self::assertSame([['id' => 9], ['id' => 8]], $items);
+        self::assertSame([9, 8], array_map(static fn(\Kodvalley\Improj\Model\AgentItem $i): int => $i->id, $items));
         self::assertSame('cursor=9', $m->requests[1]->getUri()->getQuery());
     }
 

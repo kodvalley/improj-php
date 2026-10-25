@@ -11,11 +11,15 @@ use Kodvalley\Improj\Exception\ConfigurationException;
 use Kodvalley\Improj\Exception\ConflictException;
 use Kodvalley\Improj\Exception\ConnectionException;
 use Kodvalley\Improj\Exception\ImprojException;
+use Kodvalley\Improj\Exception\MethodNotAllowedException;
 use Kodvalley\Improj\Exception\NotFoundException;
+use Kodvalley\Improj\Exception\PayloadTooLargeException;
 use Kodvalley\Improj\Exception\PermissionException;
 use Kodvalley\Improj\Exception\RateLimitException;
 use Kodvalley\Improj\Exception\ServerException;
+use Kodvalley\Improj\Exception\ServiceUnavailableException;
 use Kodvalley\Improj\Exception\UnprocessableException;
+use Kodvalley\Improj\Exception\UnsupportedMediaTypeException;
 use Kodvalley\Improj\Internal\Redactor;
 use Kodvalley\Improj\RequestOptions;
 use LogicException;
@@ -45,7 +49,7 @@ final class Transport
     public const API_VERSION = '2026-10-24';
     public const DEFAULT_BASE_URL = 'https://improj.com/api/v1';
 
-    private const FORBIDDEN_HEADERS = ['authorization', 'cookie', 'host', 'content-length'];
+    private const FORBIDDEN_HEADERS = ['authorization', 'cookie', 'host', 'content-length', 'x-request-id', 'improj-api-version', 'idempotency-key'];
 
     private readonly string $basePath;
     private readonly string $origin;
@@ -170,8 +174,18 @@ final class Transport
         if ($this->token !== null) {
             $headers['Authorization'] = 'Bearer ' . $this->token;
         }
-        if ($this->apiVersion !== null) {
-            $headers['IMPROJ-API-Version'] = $this->apiVersion;
+        $apiVersion = $options->apiVersion === null ? $this->apiVersion : ($options->apiVersion === false ? null : $options->apiVersion);
+        if ($apiVersion !== null) {
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $apiVersion) !== 1) {
+                throw new ConfigurationException('apiVersion must look like 2026-10-24.', 'CONFIGURATION');
+            }
+            $headers['IMPROJ-API-Version'] = $apiVersion;
+        }
+        if ($options->requestId !== null) {
+            if (preg_match('/^[A-Za-z0-9._:-]{8,64}$/', $options->requestId) !== 1) {
+                throw new ConfigurationException('requestId must be 8 to 64 characters of A-Z a-z 0-9 . _ : -', 'CONFIGURATION');
+            }
+            $headers['X-Request-Id'] = $options->requestId;
         }
 
         $idempotencyKey = null;
@@ -411,9 +425,13 @@ final class Transport
             $status === 401 => AuthenticationException::class,
             $status === 403 => PermissionException::class,
             $status === 404 => NotFoundException::class,
+            $status === 405 => MethodNotAllowedException::class,
             $status === 409 => ConflictException::class,
+            $status === 413 => PayloadTooLargeException::class,
+            $status === 415 => UnsupportedMediaTypeException::class,
             $status === 422 => UnprocessableException::class,
             $status === 429 => RateLimitException::class,
+            $status === 503 => ServiceUnavailableException::class,
             $status >= 500 => ServerException::class,
             default => ImprojException::class,
         };

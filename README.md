@@ -65,7 +65,10 @@ The SDK sends the token only as `Authorization: Bearer ...`, never in a URL and 
 | `autoIdempotencyKeys` | `true` | Random `Idempotency-Key` on every POST |
 | `headers` | `[]` | Extra headers (`Authorization`, `Cookie` refused) |
 
-Every method takes `?RequestOptions $options` last: `new RequestOptions(idempotencyKey: 'order-123', maxRetries: 0, headers: [...])`.
+Every method takes `?RequestOptions $options` last: `new RequestOptions(idempotencyKey: 'order-123', maxRetries: 0, headers: [...], requestId: 'sync-job-42', apiVersion: '2026-10-24')`.
+
+- `requestId` is sent as `X-Request-Id` (8 to 64 characters of `A-Z a-z 0-9 . _ : -`); the API echoes it back and `getRequestId()` returns it, so one call can be followed through your logs and IMPROJ support.
+- `apiVersion` overrides the client's `IMPROJ-API-Version` pin for one request; `false` sends none. An unsupported version answers `400 API_VERSION_UNSUPPORTED`.
 
 ## Resources
 
@@ -81,7 +84,7 @@ Every method takes `?RequestOptions $options` last: `new RequestOptions(idempote
 | `$improj->calendar` | `list($from, $to)` (your own calendar) |
 | `$improj->meetings` | `list`, `all`, `get` |
 | `$improj->webhooks` | `list`, `all`, `create`, `get`, `update`, `delete`, `test`, `deliveries` |
-| `$improj->agents` | `list()`, `items($agentId)`, `postNote($agentId, [...])` (Enterprise) |
+| `$improj->agents` | `list()`, `items($agentId)` (follows the signed `next_cursor`), `postNote($agentId, [...])` (Enterprise; typed `Agent`, `AgentItem`, `AgentNote`) |
 | `$improj->openapi()`, `$improj->request($method, $path, $query, $body)` | the live OpenAPI document; any endpoint not wrapped yet |
 
 Results are typed, read-only models (`Task`, `Project`, `ProjectFile`...) with camelCase properties; request arrays use the API's snake_case fields. `$model->toArray()` returns everything the API sent, including fields newer than this SDK.
@@ -104,7 +107,9 @@ Cursors are opaque and signed by the API. A repeated cursor stops the walk with 
 
 ## Errors
 
-Every failure is an `ImprojException` with `getErrorCode()` (the API's stable code), `getStatus()`, `getRequestId()`, `getErrors()` (field problems of a 400) and `getRetryAfter()`. Subclasses: `BadRequestException` (400), `AuthenticationException` (401), `PermissionException` (403), `NotFoundException` (404), `ConflictException` (409), `UnprocessableException` (422), `RateLimitException` (429), `ServerException` (5xx), `ConnectionException` (no answer), `ConfigurationException`.
+Every failure is an `ImprojException` with `getErrorCode()` (the API's stable code), `getStatus()`, `getRequestId()`, `getErrors()` (field problems of a 400) and `getRetryAfter()`. Subclasses: `BadRequestException` (400), `AuthenticationException` (401), `PermissionException` (403), `NotFoundException` (404), `MethodNotAllowedException` (405), `ConflictException` (409), `PayloadTooLargeException` (413), `UnsupportedMediaTypeException` (415), `UnprocessableException` (422), `RateLimitException` (429), `ServerException` (5xx) with `ServiceUnavailableException` (503), `ConnectionException` (no answer), `ConfigurationException`.
+
+`ErrorCode` holds a constant for every code the API documents (`ErrorCode::API_CODES`; a contract test keeps it in step with openapi.json): `if ($e->getErrorCode() === ErrorCode::VIEWER_READ_ONLY) { ... }`.
 
 ```php
 use Kodvalley\Improj\Exception\ImprojException;

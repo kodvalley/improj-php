@@ -84,7 +84,7 @@ final class FilesResource extends AbstractResource
         if ($upload instanceof Upload && \strlen($contents) > $upload->maxBytes) {
             throw new ConfigurationException(sprintf('The data is %d bytes but the upload was announced with at most %d.', \strlen($contents), $upload->maxBytes), 'CONFIGURATION');
         }
-        $opts = $options === null ? null : new RequestOptions(null, $options->maxRetries, $options->headers);
+        $opts = $options === null ? null : new RequestOptions(null, $options->maxRetries, $options->headers, $options->requestId, $options->apiVersion);
         $body = $this->transport->upload('/uploads/' . $id, $contents, $opts);
         try {
             if ($body === null || array_is_list($body)) {
